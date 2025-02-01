@@ -46,4 +46,5 @@ module.exports = {
   createEmailVerifyToken,
   sendAccessToken,
   sendRefreshToken,
+  sendEmailVerifyToken,
 };
