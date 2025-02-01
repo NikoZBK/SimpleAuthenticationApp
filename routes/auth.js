@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { hash, compare } = require('bcryptjs');
 const { verify } = require('jsonwebtoken');
+const { protected } = require('../utils/protected');
 
 const {
   createAccessToken,
@@ -16,6 +17,15 @@ const User = require('../models/user');
 
 /* Endpoints */
 
+// PROTECTED
+router.get('/protected', protected, async (req, res) => {
+  try {
+    // TODO: Send the data if user exists
+  } catch (error) {
+    // TODO: Protected route general error
+  }
+});
+
 // SIGN UP
 router.post('/signup', async (req, res) => {
   try {
@@ -24,13 +34,13 @@ router.post('/signup', async (req, res) => {
     const user = await User.findOne({ email: email });
 
     if (user) {
-      // User already exists, get outta here
+      // ! User already exists
       return res.status(500).json({
         message: 'Account already exists, please try logging in.',
         type: 'warning',
       });
     }
-    // User does not exist, so create the user and hash the password
+    // * User does not exist, so create the user and hash the password
     const passwordHash = await hash(password, 10);
     const newUser = new User({
       email: email,
@@ -61,23 +71,25 @@ router.post('/signin', async (req, res) => {
     const user = await User.findOne({ email: email });
 
     if (!user) {
+      // ! User does not exist
       return res.status(500).json({
         message: "User doesn't exist!",
         type: 'error',
       });
     }
 
-    // User exists, so proceed with password check
+    // * User exists, so proceed with password check
     const isMatch = await compare(password, user.password);
 
     if (!isMatch) {
+      // ! Password doesn't match
       return res.status(500).json({
         message: 'Password is incorrect!',
         type: 'error',
       });
     }
 
-    // Password matches, so create the tokens
+    // * Password matches, so create the tokens
     const accessToken = createAccessToken(user._id);
     const refreshToken = createRefreshToken(user._id);
 
@@ -113,16 +125,18 @@ router.post('/logout', async (_req, res) => {
 // REFRESH ACCESS TOKEN
 router.post('/refresh_token', async (req, res) => {
   try {
+    // Grab the refresh token from the cookies
     const { refreshtoken } = req.cookies;
 
     if (!refreshtoken) {
+      // ! Refresh token does not exist
       return res.status(500).json({
         message: 'No refresh token!',
         status: 'error',
       });
     }
 
-    // Refresh token successfully created, so verify it
+    // * Refresh token found, so verify it
     let id;
     try {
       id = verify(refreshtoken, process.env.REFRESH_TOKEN_SECRET).id;
@@ -132,17 +146,19 @@ router.post('/refresh_token', async (req, res) => {
         status: 'error',
       });
     }
-    // Refresh token is valid, so check if the user even exists
+    // * Refresh token is valid, so check if the user even exists
     const user = await User.findById(id);
     if (!user) {
+      // ! User does not exist
       return res.status(500).json({
         message: "User doesn't exist!",
         status: 'error',
       });
     }
 
-    // User exists, so now check if the refresh token is correct
+    // * User exists, so now check if the refresh token is correct
     if (user.refreshtoken !== refreshtoken) {
+      // ! Refresh token doesn't match
       return res.status(500).json({
         message: 'Invalid refresh token!',
         status: 'error',
