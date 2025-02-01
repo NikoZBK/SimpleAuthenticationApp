@@ -1,3 +1,5 @@
+// TODO: Convert CommonJS to ES modules
+// * For learning purposes, I am sticking with CommonJS until the project is complete
 require('dotenv').config();
 
 const express = require('express');
