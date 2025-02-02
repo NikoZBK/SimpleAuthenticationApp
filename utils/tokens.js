@@ -2,7 +2,7 @@ const { sign } = require('jsonwebtoken');
 
 const createAccessToken = id => {
   return sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: 15 * 60,
+    expiresIn: 15 * 60, // 15 minutes
   });
 };
 
@@ -12,9 +12,10 @@ const createRefreshToken = id => {
   });
 };
 
-const createEmailVerifyToken = id => {
-  return sign({ id }, process.env.EMAIL_VERIFY_TOKEN_SECRET, {
-    expiresIn: 15 * 60,
+const createPasswordResetToken = ({ _id, email, password }) => {
+  const secret = password; // * Make token one time use by making old password the secret
+  return sign({ id: _id, email }, secret, {
+    expiresIn: 15 * 60, // 15 minutes
   });
 };
 
@@ -32,19 +33,10 @@ const sendRefreshToken = (res, refreshToken) => {
   });
 };
 
-const sendEmailVerifyToken = (_req, res, emailVerifyToken) => {
-  res.json({
-    emailVerifyToken,
-    message: 'Email Verified',
-    type: 'success',
-  });
-};
-
 module.exports = {
   createAccessToken,
   createRefreshToken,
-  createEmailVerifyToken,
+  createPasswordResetToken,
   sendAccessToken,
   sendRefreshToken,
-  sendEmailVerifyToken,
 };

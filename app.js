@@ -20,7 +20,7 @@ app.use(cookieParser());
 app.use('/', indexRouter);
 app.use('/auth', authRouter);
 
-app.listen(PORT, function () {
+app.listen(PORT, () => {
   console.log(`🚀 Listening on port ${PORT}`);
 });
 

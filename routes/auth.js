@@ -7,10 +7,9 @@ const { protected } = require('../utils/protected');
 const {
   createAccessToken,
   createRefreshToken,
-  createEmailVerifyToken,
+  createPasswordResetToken,
   sendAccessToken,
   sendRefreshToken,
-  sendEmailVerifyToken,
 } = require('../utils/tokens');
 
 const User = require('../models/user');
