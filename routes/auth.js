@@ -142,6 +142,71 @@ router.post('/refresh_token', async (req, res) => {
     });
   }
 });
+
+/**
+ * @route POST /reset-password/:id/:token
+ * @group Authentication - Operations related to user authentication
+ * @param {string} id.path.required - user's id
+ * @param {string} token.path.required - user's password reset token
+ * @param {string} newPassword.body.required - user's new password
+ * @returns {object} 200 - Password successfully changed and confirmation email sent successfully
+ * @returns {Error} 500 - User does not exist | Invalid token | Error sending email
+ */
+router.post('/reset-password/:id/:token', async (req, res) => {
+  try {
+    const { id, token } = req.params;
+    const { newPassword } = req.body;
+
+    // Check if user exists
+    const user = await User.findById(id);
+
+    if (!user) {
+      // ! User does not exist
+      return res.status(500).json({
+        message: "User doesn't exist!",
+        type: 'error',
+      });
+    }
+    // * User exists, so verify the token
+    const isValid = verify(token, user.password);
+
+    // Verify the token
+    if (!isValid) {
+      // ! Token is invalid
+      return res.status(500).json({
+        message: 'Invalid token!',
+        type: 'error',
+      });
+    }
+    // Set the user's password to the new password
+    user.password = await hash(newPassword, 10);
+
+    await user.save();
+
+    // Send the password reset confirmation email
+    const mailOptions = passwordResetConfirmationTemplate(user);
+    transporter.sendMail(mailOptions, (err, _info) => {
+      if (err) {
+        // ! Error sending email
+        return res.status(500).json({
+          message: 'Error sending email!',
+          type: 'error',
+        });
+      }
+      // * Email sent successfully
+      return res.json({
+        message: 'Email sent!',
+        type: 'success',
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      type: 'error',
+      message: 'Error sending email!',
+      error,
+    });
+  }
+});
 /**
  * @route POST /send-password-reset-email
  * @group Authentication - Operations related to user authentication

@@ -171,6 +171,45 @@ Code: `200 OK`
 
 ---
 
+## `POST /reset-password/:id/:token`
+
+### Description
+
+This endpoint is used to reset the user's password. It verifies the user's password reset token and updates the user's password if the token is valid.
+
+### URL
+
+`/reset-password/:id/:token`
+
+### Method
+
+`POST`
+
+### Parameters
+
+| Name        | Type   | In   | Description                 | Required |
+| ----------- | ------ | ---- | --------------------------- | -------- |
+| id          | string | path | User's ID                   | Yes      |
+| token       | string | path | User's password reset token | Yes      |
+| newPassword | string | body | User's new password         | Yes      |
+
+### Request Body
+
+None
+
+### Success Response
+
+Code: `200 OK`
+
+```json
+{
+  "message": "Email sent!",
+  "type": "success"
+}
+```
+
+---
+
 ## `POST /send-password-reset-email`
 
 ### Description
