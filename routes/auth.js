@@ -27,18 +27,13 @@ const User = require('../models/user');
  * @returns {object} 200 - User logged out successfully
  * @returns {Error} 500 - Error logging out
  */
-router.post('/logout', async (_req, res) => {
-  try {
-    res.clearCookie('refreshtoken');
-    return res.json({
-      message: 'Logged out successfully!',
-      type: 'success',
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ type: 'error', message: 'Error logging out!', error });
-  }
+router.post('/logout', (_req, res) => {
+  // clear cookies
+  res.clearCookie('refreshtoken');
+  return res.json({
+    message: 'Logged out successfully!',
+    type: 'success',
+  });
 });
 /**
  * @route GET /protected
@@ -74,7 +69,6 @@ router.get('/protected', protected, async (req, res) => {
 /**
  * @route POST /refresh_token
  * @group Authentication - Operations related to user authentication
- * @param {string} refreshtoken.body.required - user's refresh token
  * @returns {object} 200 - Token refreshed successfully status along with new access token
  * @returns {Error} 500 - No refresh token | Invalid refresh token | User does not exist | Other error occurred
  */
@@ -298,8 +292,10 @@ router.post('/signin', async (req, res) => {
     await user.save();
 
     // Finally, send the response (the access and refresh tokens)
-    sendAccessToken(req, res, accessToken);
     sendRefreshToken(res, refreshToken);
+    sendAccessToken(req, res, accessToken);
+
+    console.log(`Refresh token sent`);
   } catch (error) {
     res.status(500).json({
       type: 'error',
