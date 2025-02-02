@@ -20,12 +20,28 @@ const User = require('../models/user');
 // PROTECTED
 router.get('/protected', protected, async (req, res) => {
   try {
-    // TODO: Send the data if user exists
+    // Check if user exists
+    if (req.user) {
+      // * User exists
+      return res.json({
+        message: 'You are logged in.',
+        type: 'success',
+        user: req.user,
+      });
+    }
+    // ! User does not exist
+    return res.status(500).json({
+      message: 'You are not logged in.',
+      status: 'error',
+    });
   } catch (error) {
-    // TODO: Protected route general error
+    res.status(500).json({
+      type: 'error',
+      message: 'Error getting protected route!',
+      error,
+    });
   }
 });
-
 // SIGN UP
 router.post('/signup', async (req, res) => {
   try {
