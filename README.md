@@ -1,4 +1,4 @@
-## Authentication API
+## Authentication Demo
 
 An authentication back end demo using JS + node and MongoDB. 
 
