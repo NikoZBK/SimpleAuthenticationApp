@@ -10,7 +10,9 @@ An authentication back end demo using JS + node and MongoDB.
   * Access and refresh token generation
 * Protected routes
   * Tokens are validated 
-* User information is managed with MongoDB
+* User information is stored using MongoDB
+
+## Instructions
 
 To install all the dependencies, run the following command:
 
