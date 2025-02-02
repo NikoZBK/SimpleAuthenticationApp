@@ -27,8 +27,8 @@ const sendAccessToken = (_req, res, accessToken) => {
   });
 };
 
-const sendRefreshToken = (res, refreshToken) => {
-  res.cookie('refreshtoken', refreshToken, {
+const sendRefreshToken = (res, refreshtoken) => {
+  res.cookie('refreshtoken', refreshtoken, {
     httpOnly: true,
   });
 };
