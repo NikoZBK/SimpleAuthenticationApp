@@ -3,7 +3,12 @@ const router = express.Router();
 const { hash, compare } = require('bcryptjs');
 const { verify } = require('jsonwebtoken');
 const { protected } = require('../utils/protected');
-
+const {
+  transporter,
+  createPasswordResetUrl,
+  passwordResetTemplate,
+  passwordResetConfirmationTemplate,
+} = require('../utils/email');
 const {
   createAccessToken,
   createRefreshToken,
@@ -16,7 +21,32 @@ const User = require('../models/user');
 
 /* Endpoints */
 
-// PROTECTED
+/**
+ * @route POST /logout
+ * @group Authentication - Operations related to user authentication
+ * @returns {object} 200 - User logged out successfully
+ * @returns {Error} 500 - Error logging out
+ */
+router.post('/logout', async (_req, res) => {
+  try {
+    res.clearCookie('refreshtoken');
+    return res.json({
+      message: 'Logged out successfully!',
+      type: 'success',
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ type: 'error', message: 'Error logging out!', error });
+  }
+});
+/**
+ * @route GET /protected
+ * @group Authentication - Operations related to user authentication
+ * @returns {object} 200 - User is logged in
+ * @returns {Error} 500 - User is not logged in | Other error occurred
+ * @security JWT
+ */
 router.get('/protected', protected, async (req, res) => {
   try {
     // Check if user exists
@@ -41,103 +71,13 @@ router.get('/protected', protected, async (req, res) => {
     });
   }
 });
-// SIGN UP
-router.post('/signup', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-    // Check if user exists first
-    const user = await User.findOne({ email: email });
-
-    if (user) {
-      // ! User already exists
-      return res.status(500).json({
-        message: 'Account already exists, please try logging in.',
-        type: 'warning',
-      });
-    }
-    // * User does not exist, so create the user and hash the password
-    const passwordHash = await hash(password, 10);
-    const newUser = new User({
-      email: email,
-      password: passwordHash,
-    });
-
-    // Save user to db
-    await newUser.save();
-
-    res.status(200).json({
-      message: 'User created successfully!',
-      type: 'success',
-    });
-  } catch (error) {
-    res.status(500).json({
-      type: 'error',
-      message: 'Error creating user!',
-      error,
-    });
-  }
-});
-// SIGN IN
-router.post('/signin', async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // Check if user exists
-    const user = await User.findOne({ email: email });
-
-    if (!user) {
-      // ! User does not exist
-      return res.status(500).json({
-        message: "User doesn't exist!",
-        type: 'error',
-      });
-    }
-
-    // * User exists, so proceed with password check
-    const isMatch = await compare(password, user.password);
-
-    if (!isMatch) {
-      // ! Password doesn't match
-      return res.status(500).json({
-        message: 'Password is incorrect!',
-        type: 'error',
-      });
-    }
-
-    // * Password matches, so create the tokens
-    const accessToken = createAccessToken(user._id);
-    const refreshToken = createRefreshToken(user._id);
-
-    // Add refresh token to the db
-    user.refreshtoken = refreshToken;
-    await user.save();
-
-    // Finally, send the response (the access and refresh tokens)
-    sendAccessToken(req, res, accessToken);
-    sendRefreshToken(res, refreshToken);
-  } catch (error) {
-    res.status(500).json({
-      type: 'error',
-      message: 'Error signing in!',
-      error,
-    });
-  }
-});
-// LOG OUT
-router.post('/logout', async (_req, res) => {
-  try {
-    res.clearCookie('refreshtoken');
-    return res.json({
-      message: 'Logged out successfully!',
-      type: 'success',
-    });
-  } catch (error) {
-    res
-      .status(500)
-      .json({ type: 'error', message: 'Error logging out!', error });
-  }
-});
-// REFRESH ACCESS TOKEN
+/**
+ * @route POST /refresh_token
+ * @group Authentication - Operations related to user authentication
+ * @param {string} refreshtoken.body.required - user's refresh token
+ * @returns {object} 200 - Token refreshed successfully status along with new access token
+ * @returns {Error} 500 - No refresh token | Invalid refresh token | User does not exist | Other error occurred
+ */
 router.post('/refresh_token', async (req, res) => {
   try {
     // Grab the refresh token from the cookies
@@ -199,6 +139,150 @@ router.post('/refresh_token', async (req, res) => {
     res.status(500).json({
       message: 'Error refreshing token!',
       type: 'error',
+    });
+  }
+});
+/**
+ * @route POST /send-password-reset-email
+ * @group Authentication - Operations related to user authentication
+ * @param {string} email.body.required - user's email
+ * @returns {object} 200 - Password reset email sent successfully
+ * @returns {Error} 500 - User does not exist | Error sending email
+ */
+router.post('/send-password-reset-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    // Check if user exists
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      // ! User does not exist
+      return res.status(500).json({
+        message: "User doesn't exist!",
+        type: 'error',
+      });
+    }
+
+    // * User exists, so create the password reset token
+    const token = createPasswordResetToken({ ...user, createdAt: Date.now() });
+    // Create the password reset url
+    const url = createPasswordResetUrl(user._id, token);
+    // Send the password reset email
+    const mailOptions = passwordResetTemplate(user, url);
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        return res.status(500).json({
+          message: 'Error sending email!',
+          type: 'error',
+        });
+      }
+      // * Email sent successfully
+      return res.json({
+        message: 'Password reset link has been sent to your email!',
+        type: 'success',
+      });
+    });
+  } catch (error) {
+    res.status(500).json({
+      type: 'error',
+      message: 'Error sending email!',
+      error,
+    });
+  }
+});
+/**
+ * @route POST /signin
+ * @group Authentication - Operations related to user authentication
+ * @param {string} email.body.required - user's email
+ * @param {string} password.body.required - user's password
+ * @returns {object} 200 - User signed in successfully
+ * @returns {Error} 500 - Account does not exist | Password is incorrect | Other error occurred
+ */
+router.post('/signin', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Check if user exists
+    const user = await User.findOne({ email: email });
+
+    if (!user) {
+      // ! User does not exist
+      return res.status(500).json({
+        message: "User doesn't exist!",
+        type: 'error',
+      });
+    }
+
+    // * User exists, so proceed with password check
+    const isMatch = await compare(password, user.password);
+
+    if (!isMatch) {
+      // ! Password doesn't match
+      return res.status(500).json({
+        message: 'Password is incorrect!',
+        type: 'error',
+      });
+    }
+
+    // * Password matches, so create the tokens
+    const accessToken = createAccessToken(user._id);
+    const refreshToken = createRefreshToken(user._id);
+
+    // Add refresh token to the db
+    user.refreshtoken = refreshToken;
+    await user.save();
+
+    // Finally, send the response (the access and refresh tokens)
+    sendAccessToken(req, res, accessToken);
+    sendRefreshToken(res, refreshToken);
+  } catch (error) {
+    res.status(500).json({
+      type: 'error',
+      message: 'Error signing in!',
+      error,
+    });
+  }
+});
+/**
+ * @route POST /signup
+ * @group Authentication - Operations related to user authentication
+ * @param {string} email.body.required - user's email
+ * @param {string} password.body.required - user's password
+ * @returns {object} 200 - User created successfully
+ * @returns {Error} 500 - Account already exists | Other error occurred
+ */
+router.post('/signup', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    // Check if user exists first
+    const user = await User.findOne({ email: email });
+
+    if (user) {
+      // ! User already exists
+      return res.status(500).json({
+        message: 'Account already exists, please try logging in.',
+        type: 'warning',
+      });
+    }
+    // * User does not exist, so create the user and hash the password
+    const passwordHash = await hash(password, 10);
+    const newUser = new User({
+      email: email,
+      password: passwordHash,
+    });
+
+    // Save user to db
+    await newUser.save();
+
+    res.status(200).json({
+      message: 'User created successfully!',
+      type: 'success',
+    });
+  } catch (error) {
+    res.status(500).json({
+      type: 'error',
+      message: 'Error creating user!',
+      error,
     });
   }
 });
