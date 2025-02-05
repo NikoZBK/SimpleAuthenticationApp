@@ -43,6 +43,7 @@ router.post('/logout', (_req, res) => {
  * @security JWT
  */
 router.get('/protected', protected, async (req, res) => {
+  console.log(`GET /protected`);
   try {
     // Check if user exists
     if (req.user) {
@@ -73,6 +74,7 @@ router.get('/protected', protected, async (req, res) => {
  * @returns {Error} 500 - No refresh token | Invalid refresh token | User does not exist | Other error occurred
  */
 router.post('/refresh_token', async (req, res) => {
+  console.log(`POST /refresh_token`);
   try {
     // Grab the refresh token from the cookies
     const { refreshtoken } = req.cookies;
@@ -147,6 +149,7 @@ router.post('/refresh_token', async (req, res) => {
  * @returns {Error} 500 - User does not exist | Invalid token | Error sending email
  */
 router.post('/reset-password/:id/:token', async (req, res) => {
+  console.log(`POST /reset-password/:id/:token`);
   try {
     const { id, token } = req.params;
     const { newPassword } = req.body;
@@ -209,6 +212,7 @@ router.post('/reset-password/:id/:token', async (req, res) => {
  * @returns {Error} 500 - User does not exist | Error sending email
  */
 router.post('/send-password-reset-email', async (req, res) => {
+  console.log(`POST /send-password-reset-email`);
   try {
     const { email } = req.body;
     // Check if user exists
@@ -221,9 +225,8 @@ router.post('/send-password-reset-email', async (req, res) => {
         type: 'error',
       });
     }
-
     // * User exists, so create the password reset token
-    const token = createPasswordResetToken({ ...user, createdAt: Date.now() });
+    const token = createPasswordResetToken(user);
     // Create the password reset url
     const url = createPasswordResetUrl(user._id, token);
     // Send the password reset email
@@ -233,6 +236,7 @@ router.post('/send-password-reset-email', async (req, res) => {
         return res.status(500).json({
           message: 'Error sending email!',
           type: 'error',
+          err,
         });
       }
       // * Email sent successfully
@@ -258,6 +262,7 @@ router.post('/send-password-reset-email', async (req, res) => {
  * @returns {Error} 500 - Account does not exist | Password is incorrect | Other error occurred
  */
 router.post('/signin', async (req, res) => {
+  console.log(`POST /signin`);
   try {
     const { email, password } = req.body;
 
@@ -313,6 +318,7 @@ router.post('/signin', async (req, res) => {
  * @returns {Error} 500 - Account already exists | Other error occurred
  */
 router.post('/signup', async (req, res) => {
+  console.log(`POST /signup`);
   try {
     const { email, password } = req.body;
     // Check if user exists first

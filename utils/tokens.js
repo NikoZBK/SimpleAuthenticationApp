@@ -1,19 +1,19 @@
 const { sign } = require('jsonwebtoken');
 
-const createAccessToken = id => {
+const createAccessToken = (id) => {
   return sign({ id }, process.env.ACCESS_TOKEN_SECRET, {
     expiresIn: 15 * 60, // 15 minutes
   });
 };
 
-const createRefreshToken = id => {
+const createRefreshToken = (id) => {
   return sign({ id }, process.env.REFRESH_TOKEN_SECRET, {
     expiresIn: '90d',
   });
 };
 
 const createPasswordResetToken = ({ _id, email, password }) => {
-  const secret = password; // * Make token one time use by making old password the secret
+  const secret = password;
   return sign({ id: _id, email }, secret, {
     expiresIn: 15 * 60, // 15 minutes
   });

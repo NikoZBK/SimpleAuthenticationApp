@@ -1,7 +1,7 @@
 const { createTransport } = require('nodemailer');
 
 const createPasswordResetUrl = (id, token) =>
-  `${process.env.CLIENT_URL}/reset-password/${id}/${token}`;
+  `${process.env.PROTOCOL}://${process.env.CLIENT_URL}:${process.env.PORT}/reset-password/${id}/${token}`;
 
 const transporter = createTransport({
   service: process.env.EMAIL_HOST,
@@ -29,11 +29,11 @@ const passwordResetTemplate = (user, url) => {
         <small>If you haven't requested a password reset, please make sure your account is secure, otherwise you can ignore this email.</small>
         <br /><br />
         <p>Thanks,</p>
-        <p>Simple Authentication App by NikoZBK</p>`,
+        <p>Auth API Demo by Nikolay Ostroukhov</p>`,
   };
 };
 
-const passwordResetConfirmationTemplate = user => {
+const passwordResetConfirmationTemplate = (user) => {
   const { email } = user;
   return {
     from: `Mail - <${process.env.EMAIL_USER}>`,
@@ -45,7 +45,7 @@ const passwordResetConfirmationTemplate = user => {
         <small>If this wasn't you, someone may have gained unauthorized access to your account. Please secure your email account as soon as possible before resetting your password.</small>
         <br /><br />
         <p>Thanks,</p>
-        <p>Simple Authentication App by NikoZBK</p>`,
+        <p>Auth API Demo by Nikolay Ostroukhov</p>`,
   };
 };
 
