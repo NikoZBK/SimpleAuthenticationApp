@@ -14,6 +14,11 @@ For API, see [documentation](https://github.com/NikoZBK/SimpleAuthenticationApp/
    * Emails are sent with a verification link
 * User information stored with MongoDB
 
+## TODO
+
+* Form validation
+* User interface
+
 ## Instructions
 
 To install all the dependencies, run the following command:
