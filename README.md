@@ -10,9 +10,9 @@ For API, see [documentation](https://github.com/NikoZBK/SimpleAuthenticationApp/
   * Passwords are hashed using `bcryptjs`
 * User login/logout
   * Access and refresh token generation
-* Protected routes
-  * Tokens are validated 
-* User information is stored using MongoDB
+* Password Resets
+   * Emails are sent with a verification link
+* User information stored with MongoDB
 
 ## Instructions
 
