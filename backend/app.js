@@ -6,8 +6,8 @@ const express = require('express');
 const cookieParser = require('cookie-parser');
 const mongoose = require('mongoose');
 
-const indexRouter = require('./backend/routes/index');
-const authRouter = require('./backend/routes/auth');
+const indexRouter = require('./routes/index');
+const authRouter = require('./routes/auth');
 
 const PORT = process.env.PORT || 8080;
 
