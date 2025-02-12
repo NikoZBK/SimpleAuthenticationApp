@@ -1,11 +1,9 @@
-// TODO: Convert CommonJS to ES modules
-// * For learning purposes, I am sticking with CommonJS until the project is complete
 import dotenv from 'dotenv/config';
-
 import express, { json, urlencoded } from 'express';
 import cookieParser from 'cookie-parser';
 import pkg from 'mongoose';
 const { connect } = pkg;
+
 import indexRouter from './routes/index.js';
 import authRouter from './routes/auth.js';
 
