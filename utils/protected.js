@@ -1,8 +1,10 @@
-const { verify } = require('jsonwebtoken');
-const User = require('../models/user');
+import pkg from 'jsonwebtoken';
+const { verify } = pkg;
+
+import User from '../models/user.js';
 
 // * Middleware function to check if user is logged in
-const protected = async (req, res, next) => {
+export const verified = async (req, res, next) => {
   // Get the token from the header
   const authorization = req.headers['authorization'];
 
@@ -50,4 +52,4 @@ const protected = async (req, res, next) => {
   next();
 };
 
-module.exports = { protected };
+export default verified;

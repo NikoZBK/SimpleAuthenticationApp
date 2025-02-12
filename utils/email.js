@@ -1,9 +1,9 @@
-const { createTransport } = require('nodemailer');
+import { createTransport } from 'nodemailer';
 
-const createPasswordResetUrl = (id, token) =>
+export const createPasswordResetUrl = (id, token) =>
   `${process.env.PROTOCOL}://${process.env.CLIENT_URL}:${process.env.PORT}/reset-password/${id}/${token}`;
 
-const transporter = createTransport({
+export const transporter = createTransport({
   service: process.env.EMAIL_HOST,
   auth: {
     user: process.env.EMAIL_USER,
@@ -11,7 +11,7 @@ const transporter = createTransport({
   },
 });
 
-const passwordResetTemplate = (user, url) => {
+export const passwordResetTemplate = (user, url) => {
   const { username, email } = user;
   return {
     from: `Mail - <${process.env.EMAIL_USER}>`,
@@ -33,7 +33,7 @@ const passwordResetTemplate = (user, url) => {
   };
 };
 
-const passwordResetConfirmationTemplate = (user) => {
+export const passwordResetConfirmationTemplate = user => {
   const { email } = user;
   return {
     from: `Mail - <${process.env.EMAIL_USER}>`,
@@ -49,7 +49,7 @@ const passwordResetConfirmationTemplate = (user) => {
   };
 };
 
-module.exports = {
+export default {
   transporter,
   createPasswordResetUrl,
   passwordResetTemplate,

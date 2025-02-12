@@ -2,7 +2,8 @@
   "name": "authentication-api-starter-code",
   "version": "1.0.0",
   "description": "Starter code of the tutorial for building a password Authentication API.",
-  "main": "app.js",
+  "main": "backend/app.js",
+  "type": "module",
   "scripts": {
     "start": "node app.js",
     "dev": "nodemon app.js localhost 8080"

@@ -1,23 +1,26 @@
-const express = require('express');
-const router = express.Router();
-const { hash, compare } = require('bcryptjs');
-const { verify } = require('jsonwebtoken');
-const { protected } = require('../utils/protected');
-const {
+import { Router } from 'express';
+import pkgbcryptjs from 'bcryptjs';
+const { hash, compare } = pkgbcryptjs;
+import pkgjsonwebtoken from 'jsonwebtoken';
+const { verify } = pkgjsonwebtoken;
+import { verified } from '../utils/protected.js';
+import {
   transporter,
   createPasswordResetUrl,
   passwordResetTemplate,
   passwordResetConfirmationTemplate,
-} = require('../utils/email');
-const {
+} from '../utils/email.js';
+import {
   createAccessToken,
   createRefreshToken,
   createPasswordResetToken,
   sendAccessToken,
   sendRefreshToken,
-} = require('../utils/tokens');
+} from '../utils/tokens.js';
 
-const User = require('../models/user');
+import User from '../models/user.js';
+
+const router = Router();
 
 /* Endpoints */
 
@@ -42,7 +45,7 @@ router.post('/logout', (_req, res) => {
  * @returns {Error} 500 - User is not logged in | Other error occurred
  * @security JWT
  */
-router.get('/protected', protected, async (req, res) => {
+router.get('/protected', verified, async (req, res) => {
   console.log(`GET /protected`);
   try {
     // Check if user exists
@@ -98,7 +101,7 @@ router.post('/refresh_token', async (req, res) => {
       });
     }
     // * Refresh token is valid, so check if the user even exists
-    const user = await User.findById(id);
+    const user = await findById(id);
     if (!user) {
       // ! User does not exist
       return res.status(500).json({
@@ -155,7 +158,7 @@ router.post('/reset-password/:id/:token', async (req, res) => {
     const { newPassword } = req.body;
 
     // Check if user exists
-    const user = await User.findById(id);
+    const user = await findById(id);
 
     if (!user) {
       // ! User does not exist
@@ -216,7 +219,7 @@ router.post('/send-password-reset-email', async (req, res) => {
   try {
     const { email } = req.body;
     // Check if user exists
-    const user = await User.findOne({ email });
+    const user = await findOne({ email });
 
     if (!user) {
       // ! User does not exist
@@ -267,7 +270,7 @@ router.post('/signin', async (req, res) => {
     const { email, password } = req.body;
 
     // Check if user exists
-    const user = await User.findOne({ email: email });
+    const user = await findOne({ email: email });
 
     if (!user) {
       // ! User does not exist
@@ -322,7 +325,7 @@ router.post('/signup', async (req, res) => {
   try {
     const { email, password } = req.body;
     // Check if user exists first
-    const user = await User.findOne({ email: email });
+    const user = await findOne({ email: email });
 
     if (user) {
       // ! User already exists
@@ -354,4 +357,4 @@ router.post('/signup', async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;
